@@ -1,1 +1,79 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Inter:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; @apply bg-surface text-ink; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold
+           px-7 py-3 rounded-lg border-none cursor-pointer tracking-wide no-underline
+           transition-all duration-200 shadow-teal hover:bg-primary-mid
+           hover:shadow-teal-md hover:-translate-y-px;
+  }
+  .btn-peach {
+    @apply inline-flex items-center gap-2 bg-peach text-ink-muted text-sm font-semibold
+           px-7 py-3 rounded-lg border-none cursor-pointer tracking-wide
+           no-underline transition-all duration-200 hover:brightness-95;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 bg-transparent text-primary text-sm font-semibold
+           px-6 py-3 rounded-lg cursor-pointer tracking-wide no-underline
+           transition-all duration-200 hover:bg-primary/5;
+    border: 1.5px solid theme('colors.primary.DEFAULT');
+  }
+  .btn-ghost-white {
+    @apply inline-flex items-center gap-2 text-white text-sm font-semibold
+           px-6 py-3 rounded-lg cursor-pointer tracking-wide no-underline
+           transition-colors hover:bg-white/25;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.35);
+  }
+  .section-label {
+    @apply flex items-center gap-2.5 text-xs font-semibold tracking-[0.18em]
+           uppercase text-primary mb-4;
+  }
+  .section-label::before {
+    content: '';
+    @apply w-7 h-px bg-primary;
+  }
+  .section-label-light {
+    @apply flex items-center gap-2.5 text-xs font-semibold tracking-[0.18em]
+           uppercase mb-4;
+    color: rgba(188,233,255,0.8);
+  }
+  .section-label-light::before {
+    content: '';
+    display: block;
+    width: 28px; height: 1px;
+    background: rgba(188,233,255,0.6);
+  }
+  .divider-accent { @apply w-12 h-0.5 bg-peach rounded-full my-5; }
+  .pull-quote {
+    @apply border-l-4 border-peach pl-6 py-1 my-8 rounded-r-xl;
+    background: rgba(254,217,184,0.18);
+  }
+  .pull-quote p { @apply font-display italic text-xl text-ink leading-relaxed; }
+  .reveal { @apply opacity-0 translate-y-5 transition-all duration-700 ease-out; }
+  .reveal.visible { @apply opacity-100 translate-y-0; }
+  .nav-tab {
+    @apply h-16 px-4 bg-transparent text-sm font-medium text-ink-muted tracking-wide
+           cursor-pointer transition-colors duration-200 hover:text-primary;
+    border: none;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-tab.active { @apply text-primary; border-bottom-color: theme('colors.primary.DEFAULT'); }
+  .tn-pill-before {
+    @apply inline-block text-[11px] font-bold tracking-[0.1em] uppercase
+           px-2.5 py-0.5 rounded-full mb-2.5 bg-sage-light text-sage;
+  }
+  .tn-pill-now {
+    @apply inline-block text-[11px] font-bold tracking-[0.1em] uppercase
+           px-2.5 py-0.5 rounded-full mb-2.5 text-ink-muted;
+    background: rgba(254,217,184,0.5);
+  }
+}
