@@ -295,12 +295,9 @@ resource "azurerm_cdn_frontdoor_route" "main" {
       "text/javascript",
       "application/javascript",
       "application/json",
+      "application/xml",
+      "application/xhtml+xml",
       "image/svg+xml",
-      "image/png",
-      "image/jpeg",
-      "image/webp",
-      "font/woff",
-      "font/woff2"
     ]
   }
 }
