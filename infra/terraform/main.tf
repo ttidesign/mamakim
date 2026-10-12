@@ -82,7 +82,7 @@ resource "azurerm_cdn_frontdoor_origin_group" "static" {
 
 resource  "azurerm_cdn_frontdoor_origin" "storage" {
     name = "storage-origin"
-    cdn_frontdoor_group_id = azurerm_cdn_frontdoor_origin_group.static.id
+    cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.static.id
     enabled = true
     certificate_name_check_enabled = true
     host_name = azurerm_storage_account.static.primary_web_host
@@ -91,7 +91,7 @@ resource  "azurerm_cdn_frontdoor_origin" "storage" {
     https_port = 443
 
     priority = 1
-    weight - 1000
+    weight = 1000
 }
 
 # Front Door Route

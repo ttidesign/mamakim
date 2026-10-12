@@ -33,7 +33,7 @@ variable "tags" {
     type = map(string)
     
     default = {
-        project ="mama-kim"
+        project = "mama-kim"
         environment = "production"
         managed_by = "terraform"
     }
