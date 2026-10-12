@@ -88,30 +88,23 @@ jobs:
                           set -euo pipefail
                           echo "Terraform Outputs"
                           terraform output
+
                           STORAGE_ACCOUNT="$(terraform output -raw storage_account_name)"
 
-                          RESOURCE_GROUP="$(terraform output -raw resource_group_name)
+                          RESOURCE_GROUP="$(terraform output -raw resource_group_name)"
 
                           FRONTDOOR_PROFILE="$(terraform output -raw frontdoor_profile_name)"
 
-                          FRONTDOOR_ENDPOINT="$(terraform output -raw frontdoor_endpoint_name)
+                          FRONTDOOR_ENDPOINT="$(terraform output -raw frontdoor_endpoint_name)"
 
-                          if [[ -z "$STORAGE_ACCOUNT" ]]; then echo "::error::Terraform storage_account_name output is empty." exit 1
-                          fi
                           echo "storage_account=$STORAGE_ACCOUNT" >> "$GITHUB_OUTPUT"
-
                           echo "resource_group=$RESOURCE_GROUP" >> "$GITHUB_OUTPUT"
-
                           echo "frontdoor_profile=$FRONTDOOR_PROFILE" >> "$GITHUB_OUTPUT"
-
                           echo "frontdoor_endpoint=$FRONTDOOR_ENDPOINT" >> "$GITHUB_OUTPUT"
 
                           echo "Storage account: $STORAGE_ACCOUNT"
-
                           echo "Resource group: $RESOURCE_GROUP"
-
                           echo "Front Door profile: $FRONTDOOR_PROFILE"
-
                           echo "Front Door endpoint: $FRONTDOOR_ENDPOINT"
 
                   # Setup Node.js
@@ -152,12 +145,15 @@ jobs:
 
                   # Purge Front Door Cache
                   - name: Purge Front Door Cache
+                    shell: bash
                     run: |
-                          az afd endpoint purge \
-                            --resource-group "${{ steps.terraform-output.outputs.resource_group }}" \
-                            --profile-name "${{ steps.terraform-output.outputs.frontdoor_profile }}" \
-                            --endpoint-name "${{ steps.terraform-output.outputs.frontdoor_endpoint }}" \
-                            --content-paths "/*"
+                          set -euo pipefail
+
+                            az afd endpoint purge \
+                              --resource-group "${{ steps.terraform-output.outputs.resource_group }}" \
+                              --profile-name "${{ steps.terraform-output.outputs.frontdoor_profile }}" \
+                              --endpoint-name "${{ steps.terraform-output.outputs.frontdoor_endpoint }}" \
+                              --content-paths "/*"
 
                   # Deployment Information
                   - name: Deployment Information
