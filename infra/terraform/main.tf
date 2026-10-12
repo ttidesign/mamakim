@@ -244,6 +244,7 @@ resource "azurerm_cdn_frontdoor_origin" "storage" {
   certificate_name_check_enabled = true
 
   host_name = azurerm_storage_account.static.primary_web_host
+  origin_host_header = azurerm_storage_account.static.primary_web_host
 
   http_port  = 80
   https_port = 443
