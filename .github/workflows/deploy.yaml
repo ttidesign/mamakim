@@ -8,17 +8,144 @@ on:
 permissions:
       id-token: write # Required for OIDC
       contents: read
+env:
+      TF_WORKING_DIR: infra/terraform
+      NODE_VERSION: 20
 
+      NX_PROJECT: mama-kim
+      BUILD_OUTPUT_DIR: dist/mama-kim
 jobs:
       build-and-deploy:
             runs-on: ubuntu-latest
             steps:
+                  # Checkout Repo
+                  - name: Checkout Repository
+                    uses: actions/checkout@v4
+
+                  # Azure Login
                   - name: Azure Login
                     uses: azure/login@v3
                     with:
                           client-id: ${{ secrets.AZURE_CLIENT_ID }}
                           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
                           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+                  # Check Azure Connection
                   - name: Check Azure Connection
                     run: |
                           az account show --output table
+
+                  # Setup Terraform
+                  - name: Setup Terraform
+                    uses: hashicorp/setup-terraform@v3
+
+                  # Terraform Init
+                  - name: Terraform Init
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          terraform init \
+                          -backend-config="resource_group_name"=${{ secrets.TF_STATE_RESOURCE_GROUP}} \
+                          -backend-config="storage_account_name=${{ secrets.TF_STATE_STORAGE_ACCOUNT }}" \
+                          -backend-config="container_name=tfstate" \
+                          -backend-config="key=mamakim.tfstate"
+
+                  # Terraform Format Check
+                  - name: Terraform Format Check
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          terraform fmt -check -recursive
+
+                  # Terraform Validate
+                  - name: Terraform Validate
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          terraform validate
+
+                  # Terraform Plan
+                  - name: Terraform Plan
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          terraform plan \
+                            -out=tfplan
+
+                  # Terraform Apply
+                  - name: Terraform Apply
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          terraform apply \
+                            -auto-approve \
+                              tfplan
+
+                  # Get Terraform Outputs
+                  - name: Get Terraform Outputs
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          echo "storage_account=$(terraform output -raw storage_account_name)" >> "$GITHUB_OUTPUT"
+
+                          echo "resource_group=$(terraform output -raw resource_group_name)" >> "$GITHUB_OUTPUT"
+
+                          echo "frontdoor_profile=$(terraform output -raw frontdoor_profile_name)" >> "$GITHUB_OUTPUT"
+
+                          echo "frontdoor_endpoint=$(terraform output -raw frontdoor_endpoint_name)" >> "$GITHUB_OUTPUT"
+
+                  # Setup Node.js
+                  - name: Setup Node.js
+                    uses: actions/setup-node@v4
+                    with:
+                          node-version: ${{ env.NODE_VERSION }}
+                          cache: npm
+
+                  # Install Dependencies
+                  - name: Install Dependencies
+                    run: |
+                          npm ci
+
+                  # Build Vue/Nx Application
+                  - name: Build Application
+                    run: |
+                          npx nx build ${{ env.NX_PROJECT }}
+
+                  # Verify Build Output
+                  - name: Verify Build Output
+                    run: |
+                          echo "Build output:"
+                          ls -lah "${{ env.BUILD_OUTPUT_DIR }}"
+
+                          if [ ! -f "${{ env.BUILD_OUTPUT_DIR }}/index.html" ]; then echo "ERROR: index.html was not found" exit 1
+                          fi
+
+                  # Upload Static Files to Azure Storage
+                  - name: Upload Static Website
+                    run: |
+                          az storage blob upload-batch \
+                            --account-name "${{ steps.terraform-output.outputs.storage_account }}" \
+                            --destination '$web' \
+                            --source "${{ env.BUILD_OUTPUT_DIR }}" \
+                            --auth-mode login \
+                            --overwrite
+
+                  # Purge Front Door Cache
+                  - name: Purge Front Door Cache
+                    run: |
+                          az afd endpoint purge \
+                            --resource-group "${{ steps.terraform-output.outputs.resource_group }}" \
+                            --profile-name "${{ steps.terraform-output.outputs.frontdoor_profile }}" \
+                            --endpoint-name "${{ steps.terraform-output.outputs.frontdoor_endpoint }}" \
+                            --content-paths "/*"
+
+                  # Deployment Information
+                  - name: Deployment Information
+                    working-directory: ${{ env.TF_WORKING_DIR }}
+                    run: |
+                          echo "================================="
+                          echo "Deployment Complete Successfully"
+                          echo "=================================" 
+
+                          echo "Azure Storage:"
+                          terraform output -raw storage_web_endpoint_https
+
+                          echo ""
+
+                          echo "Azure Front Door:"
+                          terraform output -raw frontdoor_url
+
+                          echo ""
