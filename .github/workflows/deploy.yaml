@@ -80,16 +80,39 @@ jobs:
                               tfplan
 
                   # Get Terraform Outputs
-                  - name: Get Terraform Outputs
+                  - name: Terraform Outputs
+                    id: terraform-output
                     working-directory: ${{ env.TF_WORKING_DIR }}
+                    shell: bash
                     run: |
-                          echo "storage_account=$(terraform output -raw storage_account_name)" >> "$GITHUB_OUTPUT"
+                          set -euo pipefail
+                          echo "Terraform Outputs"
+                          terraform output
+                          STORAGE_ACCOUNT="$(terraform output -raw storage_account_name)"
 
-                          echo "resource_group=$(terraform output -raw resource_group_name)" >> "$GITHUB_OUTPUT"
+                          RESOURCE_GROUP="$(terraform output -raw resource_group_name)
 
-                          echo "frontdoor_profile=$(terraform output -raw frontdoor_profile_name)" >> "$GITHUB_OUTPUT"
+                          FRONTDOOR_PROFILE="$(terraform output -raw frontdoor_profile_name)"
 
-                          echo "frontdoor_endpoint=$(terraform output -raw frontdoor_endpoint_name)" >> "$GITHUB_OUTPUT"
+                          FRONTDOOR_ENDPOINT="$(terraform output -raw frontdoor_endpoint_name)
+
+                          if [[ -z "$STORAGE_ACCOUNT" ]]; then echo "::error::Terraform storage_account_name output is empty." exit 1
+                          fi
+                          echo "storage_account=$STORAGE_ACCOUNT" >> "$GITHUB_OUTPUT"
+
+                          echo "resource_group=$RESOURCE_GROUP" >> "$GITHUB_OUTPUT"
+
+                          echo "frontdoor_profile=$FRONTDOOR_PROFILE" >> "$GITHUB_OUTPUT"
+
+                          echo "frontdoor_endpoint=$FRONTDOOR_ENDPOINT" >> "$GITHUB_OUTPUT"
+
+                          echo "Storage account: $STORAGE_ACCOUNT"
+
+                          echo "Resource group: $RESOURCE_GROUP"
+
+                          echo "Front Door profile: $FRONTDOOR_PROFILE"
+
+                          echo "Front Door endpoint: $FRONTDOOR_ENDPOINT"
 
                   # Setup Node.js
                   - name: Setup Node.js
